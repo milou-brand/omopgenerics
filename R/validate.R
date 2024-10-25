@@ -118,7 +118,10 @@ validateCohortArgument <- function(cohort,
   return(cohort)
 }
 
-#' Validate cohortId argument.
+#' Validate cohortId argument. CohortId can either be a cohort_definition_id
+#' value, a cohort_name or a tidyselect expression referinc to cohort_names. If
+#' you want to support tidyselect expressions please use the function as:
+#' `validateCohortIdArgument({{cohortId}}, cohort)`.
 #'
 #' @param cohortId A cohortId vector to be validated.
 #' @param cohort A cohort_table object.
@@ -132,26 +135,72 @@ validateCohortIdArgument <- function(cohortId,
                                      validation = "error",
                                      call = parent.frame()) {
   assertValidation(validation)
-  assertNumeric(cohortId, integerish = TRUE, null = TRUE, min = 1, unique = TRUE, call = call)
   assertClass(cohort, class = "cohort_table", call = call)
-  possibleCohortIds <- settings(cohort) |>
-    dplyr::pull("cohort_definition_id") |>
-    as.integer()
-  if (is.null(cohortId)) {
-    cohortId <- possibleCohortIds
-  } else {
-    cohortId <- as.integer(cohortId)
-    notPresent <- cohortId[!cohortId %in% possibleCohortIds]
-    cohortId <- cohortId[cohortId %in% possibleCohortIds]
-    if (length(notPresent) > 0) {
-      if (validation == "error" | length(cohortId) == 0) {
-        cli::cli_abort("cohort definition id: {notPresent} not defined in settings.", call = call)
-      } else if (validation == "warning") {
-        cli::cli_warn(c("!" = "cohort definition id: {notPresent} not considered as they are not defined in settings."), call = call)
-      }
-    }
+  set <- settings(cohort)
+
+  if (isTidySelect(rlang::enquo(cohortId))) {
+    cohortId <- selectTables(set$cohort_name, cohortId)
   }
+
+  if (is.null(cohortId)) {
+    cohortId <- set$cohort_definition_id
+  } else if (is.numeric(cohortId)) {
+    cohortId <- as.integer(cohortId)
+    areIn <- cohortId %in% set$cohort_definition_id
+    notPresent <- cohortId[!areIn]
+    cohortId <- cohortId[areIn]
+    if (length(notPresent) > 0) {
+      report(
+        message = "cohort definition id: {notPresent} not defined in settings.",
+        validation = validation,
+        call = call
+      )
+    }
+    cohortId <- set$cohort_definition_id[getId(set$cohort_definition_id, cohortId)]
+  } else if (is.character(cohortId)) {
+    areIn <- cohortId %in% set$cohort_name
+    notPresent <- cohortId[!areIn]
+    cohortId <- cohortId[areIn]
+    if (length(notPresent) > 0) {
+      report(
+        message = "cohort name: {notPresent} not defined in settings.",
+        validation = validation,
+        call = call
+      )
+    }
+    cohortId <- set$cohort_definition_id[getId(set$cohort_name, cohortId)]
+  } else {
+    cli::cli_abort("{.arg cohortId} can either be an integer, a character, a tidyselect expression or NULL.")
+  }
+
+  if (length(cohortId) == 0) {
+    report(message = "cohortId is empty.", validation = validation, call = call)
+  }
+
   return(cohortId)
+}
+isTidySelect <- function(arg) {
+  # check if call
+  isCall <- rlang::quo_is_call(arg)
+
+  # selection functions that we want to support
+  tidyFunctions <- c("starts_with", "contains", "ends_with", "matches",
+                     "everything", "all_of", "any_of")
+
+  if (isCall) {
+    fn <- as.character(rlang::quo_get_expr(arg))[1] |>
+      removePackageName()
+    return(fn %in% tidyFunctions)
+  }
+
+  return(FALSE)
+}
+removePackageName <- function(x) {
+  x <- stringr::str_split_1(x, "::")
+  x[length(x)]
+}
+getId <- function(x, ids) {
+  purrr::map_int(ids, \(xx) which(x == xx))
 }
 
 #' Validate conceptSet argument.
@@ -625,4 +674,59 @@ validateResultArguemnt <- function(result,
     "0.4.0", "validateResultArguemnt()", "validateResultArgument()"
   )
   validateResultArgument(result = result, validation = validation, call = call)
+}
+
+
+
+#' isResultSuppressed
+#'
+#' @param result The suppressed result to check
+#' @param minCellCount  Minimum count of records used when suppressing
+#'
+#' @return Warning or message with check result
+#' @export
+#'
+isResultSuppressed <- function(result, minCellCount = 5) {
+  # initial checks
+  validateResultArgument(result)
+  assertNumeric(minCellCount, length = 1, integerish = TRUE)
+
+  # retrieve settings
+  set <- settings(result)
+  if (nrow(set) == 0) return(invisible(TRUE))
+  if (!"min_cell_count" %in% colnames(set)) {
+    cli::cli_warn("Column {.var min_cell_count} is missing in settings, result is not suppressed.")
+    return(invisible(FALSE))
+  }
+
+  set <- set |>
+    dplyr::select("result_id", "min_cell_count") |>
+    dplyr::mutate("min_cell_count" = as.integer(.data$min_cell_count))
+
+  if (all(minCellCount == unique(set$min_cell_count))) {
+    cli::cli_inform(c(
+      "v" = "The {.cls summarised_result} is suppressed with minCellCount = {minCellCount}."
+    ))
+    return(invisible(TRUE))
+  } else {
+    idSup <- set$result_id[set$min_cell_count == minCellCount]
+    idNotSup <- set$result_id[set$min_cell_count == 0 | is.na(set$min_cell_count)]
+    idSupLow <- set$result_id[set$min_cell_count > 0 & set$min_cell_count < minCellCount]
+    idSupUpp <- set$result_id[set$min_cell_count > minCellCount]
+    addMesSup(character(), idSup, result, "v", glue::glue("suppressed minCellCount = {minCellCount}")) |>
+      addMesSup(idNotSup, result, "x", "not suppressed") |>
+      addMesSup(idSupLow, result, "x", glue::glue("suppressed with minCellCount < {minCellCount}")) |>
+      addMesSup(idSupUpp, result, "!", glue::glue("suppressed with minCellCount > {minCellCount}")) |>
+      cli::cli_warn()
+    return(invisible(FALSE))
+  }
+}
+addMesSup <- function(mes, ids, result, lab, err) {
+  if (length(ids) == 0) return(mes)
+  ncounts <- sum(result$result_id %in% ids)
+  ms <- "{length(ids)} ({ncounts} row{?s}) {err}." |>
+    cli::cli_text() |>
+    cli::cli_fmt() |>
+    as.character()
+  c(mes, rlang::set_names(ms, lab))
 }

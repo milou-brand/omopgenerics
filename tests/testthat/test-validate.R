@@ -13,16 +13,88 @@ test_that("test validateNameArgument", {
 })
 
 test_that("test validateCohortIdArgument", {
-  cohort <- 1
-  class(cohort) <- c("cohort_table", "cdm_table")
+  # toy cohort
+  cohort <- dplyr::tibble(
+    cohort_definition_id = 1:4L, subject_id = 1L, cohort_start_date = Sys.Date(),
+    cohort_end_date = Sys.Date()
+  ) |>
+    addClass(c("cohort_table", "cdm_table"))
   attr(cohort, "cohort_set") <- dplyr::tibble(
-    "cohort_definition_id" = c(2, 4), "cohort_name" = c("a", "b")
+    "cohort_definition_id" = c(1L, 2L, 3L, 4L),
+    "cohort_name" = c("cohort_a", "acetaminophen", "paracetamol", "cohort_ol")
   )
-  expect_error(validateCohortIdArgument("adsfd", cohort))
+
+  # numeric behavior
   expect_identical(validateCohortIdArgument(2, cohort), 2L)
   expect_identical(validateCohortIdArgument(c(2, 4), cohort), c(2L, 4L))
   expect_identical(validateCohortIdArgument(c(4L, 2L), cohort), c(4L, 2L))
-  expect_error(validateCohortIdArgument(1, cohort))
+  expect_error(validateCohortIdArgument(5, cohort))
+  expect_warning(expect_identical(
+    validateCohortIdArgument(c(2, 8), cohort, validation = "warning"),
+    2L
+  ))
+  expect_warning(expect_warning(expect_identical(
+    validateCohortIdArgument(5, cohort, validation = "warning"),
+    integer()
+  )))
+
+  # character behavior
+  expect_identical(validateCohortIdArgument("acetaminophen", cohort), 2L)
+  expect_identical(
+    validateCohortIdArgument(c("acetaminophen", "paracetamol"), cohort),
+    c(2L, 3L))
+  expect_identical(
+    validateCohortIdArgument(c("paracetamol", "acetaminophen"), cohort),
+    c(3L, 2L))
+  expect_error(validateCohortIdArgument(c("not_present"), cohort))
+  expect_warning(expect_identical(
+    validateCohortIdArgument(
+      c("paracetamol", "not_present"), cohort, validation = "warning"
+    ),
+    3L
+  ))
+  expect_warning(expect_warning(expect_identical(
+    validateCohortIdArgument(c("not_present"), cohort, validation = "warning"),
+    integer()
+  )))
+
+  # tidyselect behavior
+  expect_identical(
+    validateCohortIdArgument(dplyr::starts_with("cohort_"), cohort),
+    c(1L, 4L)
+  )
+  expect_identical(
+    validateCohortIdArgument(dplyr::ends_with("ol"), cohort),
+    c(3L, 4L)
+  )
+  expect_identical(
+    validateCohortIdArgument(dplyr::everything(), cohort),
+    c(1L, 2L, 3L, 4L)
+  )
+  expect_error(
+    validateCohortIdArgument(dplyr::any_of(c("sdfghjk", "dfg")), cohort)
+  )
+  expect_warning(expect_identical(
+    validateCohortIdArgument(
+      dplyr::any_of(c("sdfghjk", "dfg")), cohort, validation = "warning"),
+    integer()
+  ))
+
+  # NULL
+  expect_identical(validateCohortIdArgument(NULL, cohort), c(1L, 2L, 3L, 4L))
+
+  # error if anything else is provided
+  expect_error(validateCohortIdArgument(list(), cohort))
+  expect_error(validateCohortIdArgument(list(), cohort, validation = "warning"))
+
+  # check in external function
+  filterCohort <- function(x, id) {
+    id <- validateCohortIdArgument({{id}}, x)
+    x |>
+      dplyr::filter(.data$cohort_definition_id %in% .env$id)
+  }
+  expect_no_error(filterCohort(cohort, dplyr::starts_with("cohort")))
+
 })
 
 test_that("test validateWindowArgument", {
@@ -295,8 +367,45 @@ test_that("test validateResults", {
 
   expect_no_error(x |>
                     newSummarisedResult() |>
-                    validateResultArguemnt())
+                    validateResultArgument())
 
+})
 
+test_that("test isResultSuppressed",{
+  obj <- dplyr::tibble(
+    "result_id" = as.integer(1),
+    "cdm_name" = "mock",
+    "group_name" = "overall",
+    "group_level" = "overall",
+    "strata_name" = c(rep("overall", 6), rep("sex", 3)),
+    "strata_level" = c(rep("overall", 6), "male", "female", "female"),
+    "variable_name" = c("number records", "age_group", "age_group", "age_group", "age_group", "my_variable", "number records", "age_group", "age_group"),
+    "variable_level" = c(NA, "<50", "<50", ">=50", ">=50", NA, NA, "<50", "<50"),
+    "estimate_name" = c("count", "count", "percentage", "count", "percentage", "random", "count", "count", "percentage"),
+    "estimate_type" = c("integer", "integer", "percentage", "integer", "percentage", "numeric", "integer", "integer", "percentage"),
+    "estimate_value" = c("10", "5", "50", "3", "30", "1", "3", "12", "6"),
+    "additional_name" = "overall",
+    "additional_level" = "overall"
+  ) |>
+    newSummarisedResult(settings = dplyr::tibble(
+      "result_id" = as.integer(1),
+      "result_type" = "summarised_characteristics",
+      "package_name" = "omopgenerics",
+      "package_version" = as.character(utils::packageVersion("omopgenerics"))
+    ))
+
+  # Test for no min_cell_count column
+  expect_warning(isResultSuppressed(result = obj, minCellCount = 3))
+
+  result <- suppress(obj, minCellCount = 2)
+
+  # Test for correctly specified min_cell_count
+  expect_no_warning(isResultSuppressed(result = result, minCellCount = 2))
+
+  # Test for greater actual min_cell_count
+  expect_warning(isResultSuppressed(result = result, minCellCount = 1))
+
+  # Test for smaller actual min_cell_count
+  expect_warning(isResultSuppressed(result = result, minCellCount = 3))
 
 })
