@@ -53,7 +53,6 @@ toSnakeCase <- function(x) {
   snakecase::to_snake_case(string = x, numerals = "asis")
 }
 
-
 #' Get the cohort definition id of a certain name
 #'
 #' @param cohort A cohort_table object.
@@ -186,8 +185,6 @@ uniqueId <- function(n = 1, exclude = character(), nChar = 3, prefix = "id_") {
   return(x)
 }
 
-
-
 #' Check if a table is empty or not
 #'
 #' @param table a table
@@ -208,7 +205,6 @@ isTableEmpty <- function(table){
      return(x)
 }
 
-
 #' Return a table of omop cdm fields informations
 #'
 #' @param cdmVersion cdm version of the omop cdm.
@@ -219,136 +215,6 @@ isTableEmpty <- function(table){
 omopTableFields <- function(cdmVersion = "5.3") {
   assertChoice(cdmVersion, choices = names(fieldsTables))
   fieldsTables[[cdmVersion]]
-}
-
-omopColumn <-
-  function(table, field, call = parent.frame()) {
-    optionsTable <- fieldTablesColumns |> dplyr::pull(.data$table_name)
-    # initial checks
-    assertChoice(table, optionsTable, call = call)
-    # internal dataset
-    fieldTablesColumns[[field]][fieldTablesColumns$table_name == table]
-
-  }
-
-
-#' Function to return the start date column name of a omop table.
-#'
-#' @param tableName name of the omop table
-#'
-#' @return the start date column name
-#' @export
-#'
-startDate <- function(tableName) {
-  x <- omopColumn(tableName, "start_date")
-
-  if (is.na(x)) {
-    cli::cli_abort("{tableName} table do not contain start date column")
-  } else{
-    return(x)
-  }
-}
-
-#' Function to return the end date column name of a omop table.
-#'
-#' @param tableName name of the omop table
-#'
-#' @return the end date column name
-#' @export
-#'
-endDate <- function(tableName) {
-  x <- omopColumn(tableName, "end_date")
-
-  if (is.na(x)) {
-    cli::cli_abort("{tableName} table do not contain end date column")
-  } else{
-    return(x)
-  }
-}
-
-#' Function to return the standard concept column name of a omop table.
-#'
-#' @param tableName name of the omop table
-#'
-#' @return the standard concept column name
-#' @export
-#'
-standardConcept <- function(tableName) {
-  x <- omopColumn(tableName, "standard_concept")
-
-  if (is.na(x)) {
-    cli::cli_abort("{tableName} table do not contain standard concept id column")
-  } else{
-    return(x)
-  }
-}
-
-#' Function to return the type concept id column name of a omop table.
-#'
-#' @param tableName name of the omop table
-#'
-#' @return the type concept column name
-#' @export
-#'
-typeConcept <- function(tableName) {
-  x <- omopColumn(tableName, "type_concept")
-
-  if (is.na(x)) {
-    cli::cli_abort("{tableName} table do not contain type concept id column")
-  } else{
-    return(x)
-  }
-}
-
-#' Function to return the unique identifier id column name of a omop table.
-#'
-#' @param tableName name of the omop table
-#'
-#' @return the unique id column name
-#' @export
-#'
-uniqueIdentifier <- function(tableName) {
-  x <- omopColumn(tableName, "unique_id")
-
-  if (is.na(x)) {
-    cli::cli_abort("{tableName} table do not contain unique id column")
-  } else{
-    return(x)
-  }
-}
-
-#' Function to return the domain id column name of a omop table.
-#'
-#' @param tableName name of the omop table
-#'
-#' @return the domain id column name
-#' @export
-#'
-domainId <- function(tableName) {
-  x <- omopColumn(tableName, "domain_id")
-
-  if (is.na(x)) {
-    cli::cli_abort("{tableName} table do not contain domain id column")
-  } else{
-    return(x)
-  }
-}
-
-#' Function to return the source concept column name of a omop table.
-#'
-#' @param tableName name of the omop table
-#'
-#' @return the source concept column name
-#' @export
-#'
-sourceConcept <- function(tableName) {
-  x <- omopColumn(tableName, "source_concept")
-
-  if (is.na(x)) {
-    cli::cli_abort("{tableName} table do not contain source concept column")
-  } else{
-    return(x)
-  }
 }
 
 #' Check if different packages version are used for summarise_results object

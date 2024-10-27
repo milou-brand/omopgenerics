@@ -857,6 +857,7 @@ omopTables <- function(version = "5.3") {
 #' have.
 #'
 #' @param table Table to see required columns.
+#' @param field Name of the specific field.
 #' @param version Version of the OMOP Common Data Model.
 #' @param onlyRequired deprecated
 #'
@@ -869,13 +870,24 @@ omopTables <- function(version = "5.3") {
 #'
 #' omopColumns("person")
 #'
-omopColumns <- function(table, version = "5.3", onlyRequired = lifecycle::deprecated()) {
+omopColumns <- function(table, field = NULL, version = "5.3", onlyRequired = lifecycle::deprecated()) {
+  # lifecycle
   if (lifecycle::is_present(onlyRequired)) {
     lifecycle::deprecate_soft("0.4.0", "omopColumns(onlyRequired = )")
   }
+
+  # initial checks
   assertVersion(version = version)
   assertTableName(table = table, version = version, type = "cdm_table")
-  getColumns(table = table, version = version, type = "cdm_table", required = FALSE)
+  assertChoice(field, choices = colnames(fieldTablesColumns), null = TRUE)
+
+  # get columns
+  if (is.null(field)) {
+    res <- getColumns(table = table, version = version, type = "cdm_table", required = FALSE)
+  } else {
+    res <- fieldTablesColumns[[field]][fieldTablesColumns$table_name == table]
+  }
+  return(res)
 }
 
 #' Cohort tables that a cdm reference can contain in the OMOP Common Data

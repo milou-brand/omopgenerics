@@ -136,42 +136,35 @@ test_that("omopTableFields", {
 
 test_that("omop column names", {
 
-# date
+  expect_error(omopColumns("observation_periodss"))
 
-  expect_true(startDate("observation_period") == "observation_period_start_date")
-  expect_true(endDate("observation_period") == "observation_period_end_date")
-  expect_true(startDate("procedure_occurrence") == "procedure_date")
-  expect_true(endDate("procedure_occurrence") == "procedure_date")
+  # date
+  expect_identical(omopColumns("observation_period", "start_date"), "observation_period_start_date")
+  expect_identical(omopColumns("observation_period", "end_date"), "observation_period_end_date")
+  expect_identical(omopColumns("procedure_occurrence", "start_date"), "procedure_date")
+  expect_identical(omopColumns("procedure_occurrence", "end_date"), "procedure_date")
 
-  expect_error(startDate("observation_periodss"))
-  expect_error(endDate("observation_periodss"))
+  # standard concept
+  expect_identical(omopColumns("device_exposure", "standard_concept"), "device_concept_id")
+  expect_identical(omopColumns("observation_period", "standard_concept"), NA_character_)
 
-# standard concept
-  expect_true((standardConcept("device_exposure") == "device_concept_id"))
-  expect_error(standardConcept("observation_period"))
-  expect_error(standardConcept("observation_periodsss"))
+  # source_concept
+  expect_identical(omopColumns("device_exposure", "source_concept"), "device_source_concept_id")
+  expect_identical(omopColumns("observation_period", "source_concept"), NA_character_)
 
-# source_concept
-  expect_true((sourceConcept("device_exposure") == "device_source_concept_id"))
-  expect_error(sourceConcept("observation_period"))
-  expect_error(sourceConcept("observation_periodsss"))
+  # type concept
+  expect_identical(omopColumns("observation_period", "type_concept"), "period_type_concept_id")
+  expect_identical(omopColumns("condition_occurrence", "type_concept"), "condition_type_concept_id")
 
-# type concept
-  expect_true((typeConcept("observation_period") == "period_type_concept_id"))
-  expect_true((typeConcept("condition_occurrence") == "condition_type_concept_id"))
-  expect_error(typeConcept("observation_periodsss"))
+  # unique id
+  expect_identical(omopColumns("observation_period", "unique_id"), "observation_period_id")
+  expect_identical(omopColumns("condition_occurrence", "unique_id"), "condition_occurrence_id")
 
-# unique id
-  expect_true((uniqueIdentifier("observation_period") == "observation_period_id"))
-  expect_true((uniqueIdentifier("condition_occurrence") == "condition_occurrence_id"))
-  expect_error(uniqueIdentifier("observation_periodsss"))
-  domainId("measurement")
-# domain_id
-  expect_true((domainId("measurement") == "measurement"))
-  expect_true((domainId("condition_occurrence") == "condition"))
-  expect_true((domainId("drug_exposure") == "drug"))
-  expect_true((domainId("observation") == "observation"))
-  expect_error(domainId("observation_periodsss"))
+  # domain_id
+  expect_identical(omopColumns("measurement", "domain_id"), "measurement")
+  expect_identical(omopColumns("condition_occurrence", "domain_id"), "condition")
+  expect_identical(omopColumns("drug_exposure", "domain_id"), "drug")
+  expect_identical(omopColumns("observation", "domain_id"), "observation")
 })
 
 test_that("resultPackageVersion", {
