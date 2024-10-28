@@ -53,7 +53,6 @@ toSnakeCase <- function(x) {
   snakecase::to_snake_case(string = x, numerals = "asis")
 }
 
-
 #' Get the cohort definition id of a certain name
 #'
 #' @param cohort A cohort_table object.
@@ -186,8 +185,6 @@ uniqueId <- function(n = 1, exclude = character(), nChar = 3, prefix = "id_") {
   return(x)
 }
 
-
-
 #' Check if a table is empty or not
 #'
 #' @param table a table
@@ -208,7 +205,6 @@ isTableEmpty <- function(table){
      return(x)
 }
 
-
 #' Return a table of omop cdm fields informations
 #'
 #' @param cdmVersion cdm version of the omop cdm.
@@ -220,7 +216,6 @@ omopTableFields <- function(cdmVersion = "5.3") {
   assertChoice(cdmVersion, choices = names(fieldsTables))
   fieldsTables[[cdmVersion]]
 }
-
 
 #' Check if different packages version are used for summarise_results object
 #'

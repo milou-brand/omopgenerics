@@ -134,6 +134,38 @@ test_that("omopTableFields", {
 
 })
 
+test_that("omop column names", {
+
+  expect_error(omopColumns("observation_periodss"))
+
+  # date
+  expect_identical(omopColumns("observation_period", "start_date"), "observation_period_start_date")
+  expect_identical(omopColumns("observation_period", "end_date"), "observation_period_end_date")
+  expect_identical(omopColumns("procedure_occurrence", "start_date"), "procedure_date")
+  expect_identical(omopColumns("procedure_occurrence", "end_date"), "procedure_date")
+
+  # standard concept
+  expect_identical(omopColumns("device_exposure", "standard_concept"), "device_concept_id")
+  expect_identical(omopColumns("observation_period", "standard_concept"), NA_character_)
+
+  # source_concept
+  expect_identical(omopColumns("device_exposure", "source_concept"), "device_source_concept_id")
+  expect_identical(omopColumns("observation_period", "source_concept"), NA_character_)
+
+  # type concept
+  expect_identical(omopColumns("observation_period", "type_concept"), "period_type_concept_id")
+  expect_identical(omopColumns("condition_occurrence", "type_concept"), "condition_type_concept_id")
+
+  # unique id
+  expect_identical(omopColumns("observation_period", "unique_id"), "observation_period_id")
+  expect_identical(omopColumns("condition_occurrence", "unique_id"), "condition_occurrence_id")
+
+  # domain_id
+  expect_identical(omopColumns("measurement", "domain_id"), "measurement")
+  expect_identical(omopColumns("condition_occurrence", "domain_id"), "condition")
+  expect_identical(omopColumns("drug_exposure", "domain_id"), "drug")
+  expect_identical(omopColumns("observation", "domain_id"), "observation")
+})
 
 test_that("resultPackageVersion", {
 
