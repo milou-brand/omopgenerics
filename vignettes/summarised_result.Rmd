@@ -197,7 +197,7 @@ There are three levels of suppression:
 
 - **suppression at group level**: all the estimates with the same: result_id, cdm_name, group_name, group_level, strata_name, strata_level, additional_name, additional_level; will be suppressed if there exist a variable_name %in% c("number subjects", "number records") that is suppressed.
 
-You can see the source code for cell suppression here: <https://github.com/darwin-eu-dev/omopgenerics/blob/main/R/methodSuppress.R>.
+You can see the source code for cell suppression here: <https://github.com/darwin-eu/omopgenerics/blob/main/R/methodSuppress.R>.
 
 ## Export and import summarised results
 
