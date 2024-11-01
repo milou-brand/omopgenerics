@@ -12,6 +12,7 @@ Provides definitions of core classes and methods used by analytic pipelines that
 Useful links:
 \itemize{
   \item \url{https://darwin-eu.github.io/omopgenerics/}
+  \item Report bugs at \url{https://github.com/darwin-eu/omopgenerics/issues}
 }
 
 }
