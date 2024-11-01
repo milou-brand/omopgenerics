@@ -78,7 +78,7 @@ bind.cohort_table <- function(..., name) {
   # initial checks
   cohorts <- list(...)
   assertList(cohorts, class = "cohort_table")
-  assertCharacter(name, length = 1)
+  name <- validateNameArgument(name, validation = "warning")
 
   tablePrefix <- tmpPrefix()
 
@@ -192,7 +192,7 @@ bind.cohort_table <- function(..., name) {
     dplyr::rename("cohort_definition_id" = "new_cohort_definition_id") |>
     dplyr::relocate(dplyr::all_of(cohortColumns("cohort_set")))
 
-  dropTable(cdm = cdm, name = dplyr::starts_with(tablePrefix))
+  cdm <- dropSourceTable(cdm = cdm, name = dplyr::starts_with(tablePrefix))
 
   # instantiate the new generated cohort set
   cdm[[name]] <- newCohortTable(
