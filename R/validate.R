@@ -68,6 +68,8 @@ validateNameArgument <- function(name,
 #' required fields will be performed.
 #' @param checkInObservation If TRUE a check that cohort entries are within
 #' the individuals observation periods will be performed.
+#' @param dropExtraColumns Whether to drop extra columns that are not the
+#' required ones.
 #' @param validation How to perform validation: "error", "warning".
 #' @param call A call argument to pass to cli functions.
 #'
@@ -78,6 +80,7 @@ validateCohortArgument <- function(cohort,
                                    checkOverlappingEntries = FALSE,
                                    checkMissingValues = FALSE,
                                    checkInObservation = FALSE,
+                                   dropExtraColumns = FALSE,
                                    validation = "error",
                                    call = parent.frame()) {
   assertValidation(validation)
@@ -101,8 +104,6 @@ validateCohortArgument <- function(cohort,
       cli::cli_warn(c("!" = "columns: {.var {notPresent}} not present in cohort object"), call = call)
     }
   }
-  cohort <- cohort |> dplyr::relocate(dplyr::any_of(cohortColumns("cohort")))
-
   if (isTRUE(checkEndAfterStart)) {
     cohort <- checkStartEnd(cohort = cohort, validation = validation, call = call)
   }
@@ -115,6 +116,19 @@ validateCohortArgument <- function(cohort,
   if (isTRUE(checkInObservation)) {
     cohort <- checkObservationPeriod(cohort = cohort, validation = validation, call = call)
   }
+  if (dropExtraColumns) {
+    cols <- colnames(cohort)
+    extraColumns <- cols[!cols %in% cohortColumns("cohort")]
+    if (length(extraColumns) > 0) {
+      cli::cli_warn(c("!" = "Extra columns dropped: {.var {extraColumns}}."))
+    }
+    cohort <- cohort |>
+      dplyr::select(dplyr::any_of(cohortColumns("cohort")))
+  } else {
+    cohort <- cohort |>
+      dplyr::relocate(dplyr::any_of(cohortColumns("cohort")))
+  }
+
   return(cohort)
 }
 

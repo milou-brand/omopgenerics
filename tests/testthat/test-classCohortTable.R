@@ -357,6 +357,19 @@ test_that("test validateCohortArgument", {
   expect_error(validateCohortArgument(cdm$person))
   expect_error(validateCohortArgument("a"))
 
+  # dropExtraColumns
+  cdm$cohort2 <- cdm$cohort1 |>
+    dplyr::mutate(extra_col = "") |>
+    dplyr::compute(name = "cohort2", temporary = FALSE)
+  expect_identical(
+    cdm$cohort2, validateCohortArgument(cdm$cohort2, dropExtraColumns = FALSE)
+  )
+  expect_warning(expect_identical(
+    cdm$cohort2 |>
+      dplyr::select(-"extra_col"),
+    validateCohortArgument(cdm$cohort2, dropExtraColumns = TRUE)
+  ))
+
 })
 
 test_that("test error if attributes lost after class creation", {
