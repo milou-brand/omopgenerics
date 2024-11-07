@@ -47,7 +47,7 @@ fieldsCohorts <- tibble(
     cdm_table_name = "cohort_set",
     cdm_field_name = c("cohort_definition_id", "cohort_name"),
     is_required = TRUE,
-    cdm_datatype = c("integer", "varchar(255")
+    cdm_datatype = c("integer", "varchar(255)")
   )) |>
   union_all(tibble(
     cdm_table_name = "cohort_attrition",
