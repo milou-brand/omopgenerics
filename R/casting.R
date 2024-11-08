@@ -32,16 +32,16 @@ detectColsToCast <- function(table, cols) {
   origColType <- unlist(cols[vals])
   newColType <- unlist(colTypes[vals])
   # will consider integer and numeric as interchangeable
-  origColType <- dplyr::case_when(
-    origColType == "integer"  ~ "integerish",
-    origColType == "numeric"  ~ "integerish",
-    .default = origColType
-  )
-  newColType <- dplyr::case_when(
-    origColType == "integer"  ~ "integerish",
-    origColType == "numeric"  ~ "integerish",
-    .default = newColType
-  )
+  origColType <- purrr::map_chr(origColType, ~ dplyr::case_when(
+    .x == "integer"  ~ "integerish",
+    .x == "numeric"  ~ "integerish",
+    TRUE ~ .x
+  ))
+  newColType <- purrr::map_chr(newColType, ~ dplyr::case_when(
+    .x == "integer"  ~ "integerish",
+    .x == "numeric"  ~ "integerish",
+    TRUE ~ .x
+  ))
   differentValues <- vals[origColType != newColType]
   colsToCast <- list(
     "new" = cols[differentValues], "old" = colTypes[differentValues])
