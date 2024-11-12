@@ -29,7 +29,8 @@ exportSummarisedResult <- function(...,
                                    fileName = "results_{cdm_name}_{date}.csv",
                                    path = getwd()) {
   # initial checks
-  results <- list(...)
+  results <- list(...) |>
+    purrr::compact()
   assertCharacter(fileName, length = 1, minNumCharacter = 1)
   assertCharacter(path, length = 1, minNumCharacter = 1)
   if (dirname(fileName) != ".") {
@@ -48,15 +49,16 @@ exportSummarisedResult <- function(...,
     fileName <- paste0(tools::file_path_sans_ext(fileName), ".csv")
   }
 
-  #if result is list(), results will be a list containing an empty list
-  if (is.null(results) || (length(results) == 1 && length(results[[1]]) == 0)) {
-    x <- emptySummarisedResult()
-    cli::cli_warn("Input is NULL, empty result exported")
+  # if result is list(), results will be a list containing an empty list
+  if (length(results) == 0) {
+    cli::cli_warn("Input is NULL, empty result exported.")
+    results <- emptySummarisedResult()
   } else {
-    assertList(x = results, class = "summarised_result")
+    results <- bind(results)
+  }
+  assertClass(results, "summarised_result")
 
-    # bind and suppress
-    results <- bind(...) |> suppress(minCellCount = minCellCount)
+  results <- suppress(results, minCellCount = minCellCount)
     # cdm name
     cdmName <- results$cdm_name |>
       unique() |>
@@ -78,8 +80,6 @@ exportSummarisedResult <- function(...,
     x <- results |>
       dplyr::as_tibble() |>
       dplyr::union_all(results |> pivotSettings() |> dplyr::as_tibble())
-
-    }
 
   utils::write.csv(
     x,
