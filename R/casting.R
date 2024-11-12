@@ -29,7 +29,20 @@ detectColsToCast <- function(table, cols) {
     lapply(dplyr::type_sum) |>
     lapply(assertClassification)
   vals <- intersect(names(colTypes), names(cols))
-  differentValues <- vals[unlist(cols[vals]) != unlist(colTypes[vals])]
+  origColType <- unlist(cols[vals])
+  newColType <- unlist(colTypes[vals])
+  # will consider integer and numeric as interchangeable
+  origColType <- purrr::map_chr(origColType, ~ dplyr::case_when(
+    .x == "integer"  ~ "integerish",
+    .x == "numeric"  ~ "integerish",
+    TRUE ~ .x
+  ))
+  newColType <- purrr::map_chr(newColType, ~ dplyr::case_when(
+    .x == "integer"  ~ "integerish",
+    .x == "numeric"  ~ "integerish",
+    TRUE ~ .x
+  ))
+  differentValues <- vals[origColType != newColType]
   colsToCast <- list(
     "new" = cols[differentValues], "old" = colTypes[differentValues])
   return(colsToCast)
