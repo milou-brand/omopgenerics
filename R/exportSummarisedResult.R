@@ -29,11 +29,10 @@ exportSummarisedResult <- function(...,
                                    fileName = "results_{cdm_name}_{date}.csv",
                                    path = getwd()) {
   # initial checks
-  results <- list(...)
-  assertList(x = results, class = "summarised_result")
+  results <- list(...) |>
+    purrr::compact()
   assertCharacter(fileName, length = 1, minNumCharacter = 1)
   assertCharacter(path, length = 1, minNumCharacter = 1)
-
   if (dirname(fileName) != ".") {
     path <- dirname(fileName)
     fileName <- basename(fileName)
@@ -50,31 +49,37 @@ exportSummarisedResult <- function(...,
     fileName <- paste0(tools::file_path_sans_ext(fileName), ".csv")
   }
 
-  # bind and suppress
-  results <- bind(...) |> suppress(minCellCount = minCellCount)
+  # if result is list(), results will be a list containing an empty list
+  if (length(results) == 0) {
+    cli::cli_warn("Input is NULL, empty result exported.")
+    results <- emptySummarisedResult()
+  } else {
+    results <- bind(results)
+  }
+  assertClass(results, "summarised_result")
 
-  # cdm name
-  cdmName <- results$cdm_name |>
-    unique() |>
-    paste0(collapse = "_")
-  fileName <- stringr::str_replace(
-    string = fileName,
-    pattern = "\\{cdm_name\\}",
-    replacement = cdmName
-  )
+  results <- suppress(results, minCellCount = minCellCount)
+    # cdm name
+    cdmName <- results$cdm_name |>
+      unique() |>
+      paste0(collapse = "_")
+    fileName <- stringr::str_replace(
+      string = fileName,
+      pattern = "\\{cdm_name\\}",
+      replacement = cdmName
+    )
+    # date
+    date <- format(Sys.Date(), format = "%Y_%m_%d") |> as.character()
+    fileName <- stringr::str_replace(
+      string = fileName,
+      pattern = "\\{date\\}",
+      replacement = date
+    )
 
-  # date
-  date <- format(Sys.Date(), format = "%Y_%m_%d") |> as.character()
-  fileName <- stringr::str_replace(
-    string = fileName,
-    pattern = "\\{date\\}",
-    replacement = date
-  )
-
-  # to tibble + pivot settings
-  x <- results |>
-    dplyr::as_tibble() |>
-    dplyr::union_all(results |> pivotSettings() |> dplyr::as_tibble())
+    # to tibble + pivot settings
+    x <- results |>
+      dplyr::as_tibble() |>
+      dplyr::union_all(results |> pivotSettings() |> dplyr::as_tibble())
 
   utils::write.csv(
     x,
