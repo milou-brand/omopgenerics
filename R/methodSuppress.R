@@ -75,7 +75,14 @@ suppress.summarised_result <- function(result,
   assertClass(
     result, class = c("tbl", "data.frame", "summarised_result"), all = TRUE
   )
-  assertNumeric(minCellCount, integerish = TRUE, min = 0, length = 1)
+  assertNumeric(minCellCount, integerish = TRUE, min = 0, length = 1, null = TRUE)
+
+  # check if suppression is needed
+  minCellCount <- as.integer(minCellCount)
+  if (length(minCellCount) == 0 || minCellCount <= 1L)  {
+    cli::cli_warn("No cell suppression done.")
+    return(result)
+  }
 
   # check if already suppressed
   set <- settings(result)
