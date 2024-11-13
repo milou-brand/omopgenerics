@@ -703,7 +703,7 @@ cdmSourceType <- function(cdm) {
 
   # check name lowercase
   if (all(name != tolower(name))) {
-    cli::cli_abort("name should be lowercase.")
+    cli::cli_abort("name should be lowercase but is {name}.")
   }
 
   # remove cdm_reference
