@@ -182,14 +182,20 @@ test_that("bind summarised_result", {
 
   # two summarised_result
   expect_no_error(new1 <- bind(res1, res2, res3, res4, res5, res6))
-  expect_identical(settings(new1), dplyr::tibble(
-    "result_id" = c(1L, 2L, 3L, 4L),
-    "result_type" = c("", "custom", "custom", ""),
-    "package_name" = "",
-    "package_version" = "",
-    "param" = c(NA, NA, TRUE, NA),
-    "washout" = c(NA, NA, NA, 35)
-  ))
+  expect_identical(
+    settings(new1),
+    dplyr::tibble(
+      result_id = c(1L, 2L, 3L, 4L),
+      result_type = c("", "custom", "custom", ""),
+      package_name = "",
+      package_version = "",
+      group = "",
+      strata = "age_group &&& sex",
+      additional = "",
+      param = c(NA, NA, "TRUE", NA),
+      washout = c(NA, NA, NA, "35")
+    )
+  )
   attr(new1, "settings") <- NULL
   expect_identical(
     new1 |> dplyr::count(.data$result_id) |> dplyr::as_tibble(),

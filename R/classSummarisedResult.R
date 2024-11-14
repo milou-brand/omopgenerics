@@ -92,7 +92,8 @@ constructSummarisedResult <- function(x, settings) {
   settings <- createSettings(x, settings)
 
   x <- x |>
-    dplyr::select(dplyr::all_of(resultColumns(table = "summarised_result")))
+    dplyr::select(dplyr::all_of(resultColumns(table = "summarised_result"))) |>
+    dplyr::filter(.data$variable_name != "settings")
 
   structure(.Data = x, settings = settings) |>
     addClass(c("summarised_result", "omop_result"))
@@ -103,7 +104,7 @@ validateSummarisedResult <- function(x,
   validateResultSettings(attr(x, "settings"), call = call)
 
   # sr
-  validateSummariseResultTable(x, call = call)
+  validateSummarisedResultTable(x, call = call)
 }
 createSettings <- function(x, settings) {
   set <- list()
@@ -196,26 +197,31 @@ createSettings <- function(x, settings) {
 }
 addLabels <- function(set, x, prefix) {
   if (!prefix %in% colnames(set)) {
-    set <- set |>
-      dplyr::left_join(
-        x |>
-          dplyr::group_by(.data$result_id) |>
-          dplyr::group_split() |>
-          purrr::map(\(x) {
-            resId <- x$result_id[1]
-            lab <- x |>
-              dplyr::select(dplyr::all_of(paste0(prefix, "_name"))) |>
-              dplyr::distinct() |>
-              dplyr::pull() |>
-              stringr::str_split(pattern = " &&& ") |>
-              unlist() |>
-              unique()
-            lab <- paste0(lab[lab != "overall"], collapse = " &&& ")
-            dplyr::tibble(result_id = resId, !!prefix := lab)
-          }) |>
-          dplyr::bind_rows(),
-        by = "result_id"
-      )
+    if (nrow(x) == 0) {
+      set <- set |>
+        dplyr::mutate(!!prefix := "")
+    } else {
+      set <- set |>
+        dplyr::left_join(
+          x |>
+            dplyr::group_by(.data$result_id) |>
+            dplyr::group_split() |>
+            purrr::map(\(x) {
+              resId <- x$result_id[1]
+              lab <- x |>
+                dplyr::select(dplyr::all_of(paste0(prefix, "_name"))) |>
+                dplyr::distinct() |>
+                dplyr::pull() |>
+                stringr::str_split(pattern = " &&& ") |>
+                unlist() |>
+                unique()
+              lab <- paste0(lab[lab != "overall"], collapse = " &&& ")
+              dplyr::tibble(result_id = resId, !!prefix := lab)
+            }) |>
+            dplyr::bind_rows(),
+          by = "result_id"
+        )
+    }
   }
   set |>
     dplyr::mutate(!!prefix := dplyr::coalesce(.data[[prefix]], ""))
@@ -283,12 +289,12 @@ reportOverlap <- function(tidy1, tidy2, group1, group2, call) {
     unname()
   cli::cli_abort(message = message, call = call)
 }
-validateSummariseResultTable <- function(x,
-                                         duplicates = TRUE,
-                                         pairs = TRUE,
-                                         duplicateEstimates = TRUE,
-                                         suppressPossibility = TRUE,
-                                         call) {
+validateSummarisedResultTable <- function(x,
+                                          duplicates = TRUE,
+                                          pairs = TRUE,
+                                          duplicateEstimates = TRUE,
+                                          suppressPossibility = TRUE,
+                                          call) {
   # all columns
   columns <- resultColumns(table = "summarised_result")
   notPresent <- columns[!columns %in% colnames(x)]

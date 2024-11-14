@@ -170,9 +170,9 @@ test_that("omop column names", {
 test_that("resultPackageVersion", {
 
   x <- dplyr::tibble(
-    "result_id" = c(as.integer(1),as.integer(2)),
+    "result_id" = c(1L, 2L),
     "cdm_name" = c("cprd","omock"),
-    "result_type" = "summarised_characteristics",
+    "result_type" = c("sc1", "sc2"),
     "package_name" = "PatientProfiles",
     "package_version" = "0.4.0",
     "group_name" = "cohort_name",
@@ -186,7 +186,8 @@ test_that("resultPackageVersion", {
     "estimate_value" = "5",
     "additional_name" = "overall",
     "additional_level" = "overall"
-  ) |> newSummarisedResult()
+  ) |>
+    newSummarisedResult()
 
   expect_invisible(x |> resultPackageVersion())
 
@@ -215,7 +216,7 @@ test_that("resultPackageVersion", {
 test_that("packages versions", {
   x <- emptySummarisedResult(settings = dplyr::tibble(
     result_id = 1:5,
-    result_type = "unknown",
+    result_type = c("rt1", "rt2", "rt3", "rt4", "rt5"),
     package_name = c(
       "PatientProfiles", "CohortCharacteristics", "visOmopResults",
       "PatientProfiles", "CohortCharacteristics"
@@ -226,7 +227,7 @@ test_that("packages versions", {
 
   x <- emptySummarisedResult(settings = dplyr::tibble(
     result_id = 1:5,
-    result_type = "unknown",
+    result_type = c("rt1", "rt2", "rt3", "rt4", "rt5"),
     package_name = c(
       "PatientProfiles", "CohortCharacteristics", "visOmopResults",
       "PatientProfiles", "CohortCharacteristics"
