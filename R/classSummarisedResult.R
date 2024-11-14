@@ -80,7 +80,7 @@ newSummarisedResult <- function(x, settings = attr(x, "settings")) {
   x <- constructSummarisedResult(x, settings)
 
   # validate
-  validateSummarisedResult(x)
+  x <- validateSummarisedResult(x)
 
   return(x)
 }
@@ -94,7 +94,7 @@ constructSummarisedResult <- function(x, settings) {
   x <- x |>
     dplyr::select(dplyr::all_of(resultColumns(table = "summarised_result")))
 
-  structure(.Data = x, settings = set) |>
+  structure(.Data = x, settings = settings) |>
     addClass(c("summarised_result", "omop_result"))
 }
 validateSummarisedResult <- function(x,
@@ -117,7 +117,7 @@ createSettings <- function(x, settings) {
     dplyr::distinct()
 
   # long settings
-  castedCols <- character()
+  notCharacter <- character()
   setLong <- x |>
     dplyr::filter(.data$variable_name == "settings") |>
     dplyr::select(
@@ -125,7 +125,7 @@ createSettings <- function(x, settings) {
     )
   if (nrow(setLong) > 0) {
     if (any(unique(setLong$estimate_type) != "character")) {
-      castedCols <- setLong$estimate_name[setLong$estimate_type != "character"]
+      notCharacter <- setLong$estimate_name[setLong$estimate_type != "character"]
     }
     set$long <- setLong |>
       dplyr::select(!"estimate_type") |>
@@ -139,7 +139,7 @@ createSettings <- function(x, settings) {
   cols <- colnames(x)
   cols <- cols[!cols %in% resultColumns("summarised_result")]
   if (length(cols) > 0) {
-    cli::cli_inform("{.var {cols}} added to settings.")
+    cli::cli_inform("{.var {cols}} moved to settings.")
     set$extra_columns <- x |>
       dplyr::select("result_id", dplyr::all_of(cols)) |>
       dplyr::distinct()
@@ -147,13 +147,15 @@ createSettings <- function(x, settings) {
 
   # merge settings
   set <- set |>
+    purrr::compact() |>
+    purrr::map(\(x) dplyr::mutate(x, result_id = as.integer(.data$result_id))) |>
     purrr::reduce(dplyr::full_join, by = "result_id")
 
   # missing settings
   compulsory <- c("result_type", "package_name", "package_version")
   colsMissing <- compulsory[!compulsory %in% colnames(set)]
   if (length(colsMissing) > 0) {
-    cli::cli_inform("{.var {colsMissing}} added to settings.")
+    cli::cli_inform("{.var {colsMissing}} added to {.pkg settings}.")
     for (col in colsMissing) {
       set <- set |>
         dplyr::mutate(!!col := "")
@@ -161,7 +163,7 @@ createSettings <- function(x, settings) {
   }
   set <- set |>
     dplyr::mutate(dplyr::across(
-      .cols = dplyr::all_of(compulsory), dplyr::coalesce, ""
+      .cols = dplyr::all_of(compulsory), \(x) dplyr::coalesce(x, "")
     ))
 
   # group, strata and additional
@@ -173,13 +175,22 @@ createSettings <- function(x, settings) {
   # all settings must be character
   types <- variableTypes(set)
   notCharacter <- c(
-    castedCols, types$variable_name[types$variable_type != "character"]
+    notCharacter,
+    types$variable_name[types$variable_type != "character" & types$variable_name != "result_id"]
   )
   if (length(notCharacter) > 0) {
     cli::cli_inform("{.var {notCharacter}} casted to character.")
     set <- set |>
-      dplyr::mutate(dplyr::across(dplyr::all_of(notCharacter), as.character))
+      dplyr::mutate(dplyr::across(
+        dplyr::all_of(notCharacter), \(x) as.character(x)
+      ))
   }
+
+  # order variables
+  initialCols <- c("result_id", "result_type", "package_name", "package_version", "group", "strata", "additional")
+  otherCols <- sort(colnames(set)[!colnames(set) %in% initialCols])
+  set <- set |>
+    dplyr::select(dplyr::all_of(c(initialCols, otherCols)))
 
   return(set)
 }
@@ -198,8 +209,8 @@ addLabels <- function(set, x, prefix) {
               dplyr::pull() |>
               stringr::str_split(pattern = " &&& ") |>
               unlist() |>
-              unique() |>
-              paste0(collapse = " &&& ")
+              unique()
+            lab <- paste0(lab[lab != "overall"], collapse = " &&& ")
             dplyr::tibble(result_id = resId, !!prefix := lab)
           }) |>
           dplyr::bind_rows(),
@@ -235,7 +246,7 @@ validateResultSettings <- function(set, call) {
       cli::cli_abort(call = call)
   }
   if (nrow(set) != nrow(dplyr::distinct(dplyr::select(set, !"result_id")))) {
-    "Each {.var result_id} must contain a unique set of {.pkg settings}." |>
+    "Each {.var result_id} must be unique and contain a unique set of {.pkg settings}." |>
       cli::cli_abort(call = call)
   }
   # tidy names
@@ -311,7 +322,8 @@ validateSummariseResultTable <- function(x,
   # duplicates
   if (duplicates) {
     nr <- nrow(x)
-    x <- x |> dplyr::distinct()
+    x <- x |>
+      dplyr::distinct()
     eliminated <- nr - nrow(x)
     if (eliminated > 0) {
       cli::cli_inform(c("!" = "{eliminated} duplicated row{?s} eliminated."))

@@ -472,7 +472,7 @@ checkNaCohort <- function(cohort, validation, call) {
     dplyr::collect()
   if (nrow(x) > 0) {
     x <- x |>
-      dplyr::mutate(dplyr::across(dplyr::everything(), as.character)) |>
+      dplyr::mutate(dplyr::across(dplyr::everything(), \(x) as.character(x))) |>
       tidyr::pivot_longer(dplyr::everything()) |>
       dplyr::filter(is.na(.data$value)) |>
       dplyr::pull("name") |>

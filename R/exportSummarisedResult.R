@@ -90,7 +90,7 @@ exportSummarisedResult <- function(...,
 pivotSettings <- function(x) {
   x |>
     settings() |>
-    dplyr::mutate(dplyr::across(!"result_id", ~ as.character(.x))) |>
+    dplyr::mutate(dplyr::across(!"result_id", \(x) as.character(x))) |>
     tidyr::pivot_longer(
       cols = !"result_id",
       names_to = "estimate_name",
