@@ -123,7 +123,8 @@ test_that("summary a generated cohort set", {
       dplyr::select("cohort_definition_id", "parameter") |>
       dplyr::distinct(),
     settings(cdm$cohort3) |>
-      dplyr::select(!"cohort_name")
+      dplyr::select(!"cohort_name") |>
+      dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
   )
 
 })

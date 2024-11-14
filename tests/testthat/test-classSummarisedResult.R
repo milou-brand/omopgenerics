@@ -112,6 +112,7 @@ test_that("test SummarisedResult object", {
 
   # check wrong case
   x <- dplyr::tibble(
+    "result_id" = 1L,
     "cdm_name" = "cprd",
     "result_type" = "summarised_characteristics",
     "package_name" = "PatientProfiles",
@@ -155,13 +156,11 @@ test_that("test SummarisedResult object", {
   expect_identical(
     sort(colnames(settings(res))),
     c("custom", "package_name", "package_version", "result_id",
-      "result_type")
+      "result_type", "group", "strata", "additional") |>
+      sort()
   )
 
-  expect_identical(
-    x |> newSummarisedResult(),
-  x |> newSummarisedResult() |> newSummarisedResult()
-  )
+  expect_identical(res, res |> newSummarisedResult())
 
   x <- dplyr::tibble(
     "result_id" = 1L,
@@ -181,8 +180,8 @@ test_that("test SummarisedResult object", {
   expect_error(x |> newSummarisedResult())
 
   x <- dplyr::tibble(
-    "result_id" = c(1, 2),
-    "cdm_name" = "eunomia",
+    "result_id" = 1L,
+    "cdm_name" = c("eunomia", "cprd"),
     "group_name" = "cohort_name",
     "group_level" = "cohort1",
     "strata_name" = "sex",
@@ -232,7 +231,7 @@ test_that("test SummarisedResult object", {
   expect_no_error(x |> newSummarisedResult())
 
   x <- dplyr::tibble(
-    "result_id" = as.integer(c(1, 2)),
+    "result_id" = 1L,
     "cdm_name" = c("cprd", "eunomia"),
     "group_name" = "cohort_name",
     "group_level" = "cohort1",
@@ -293,7 +292,7 @@ test_that("test SummarisedResult object", {
   expect_identical(y, x)
 
   x <- dplyr::tibble(
-    "result_id" = as.integer(1),
+    "result_id" = 1L,
     "cdm_name" = "cprd",
     "group_name" = "cohort_name",
     "group_level" = "cohort1",
@@ -307,8 +306,7 @@ test_that("test SummarisedResult object", {
     "additional_name" = "overall",
     "additional_level" = "overall"
   )
-
-  expect_warning(x <- newSummarisedResult(x = x))
+  expect_message(x <- newSummarisedResult(x = x))
 
   expect_true(all(
     c("result_type", "package_name", "package_version") %in%

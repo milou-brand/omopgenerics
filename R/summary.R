@@ -73,7 +73,7 @@ summary.cdm_reference <- function(object, ...) {
         "min" = min(.data$observation_period_start_date, na.rm = TRUE)
       ) |>
       dplyr::collect() |>
-      dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
+      dplyr::mutate(dplyr::across(dplyr::everything(), \(x) as.character(x)))
   } else {
     observation_period_info <- dplyr::tibble(
       "count" = "0", "max" = NA_character_, "min" = NA_character_
@@ -136,7 +136,7 @@ summary.cdm_reference <- function(object, ...) {
       "cdm_release_date", "cdm_description", "cdm_documentation_reference"
     ))) |>
     dplyr::mutate("cdm_source_type" = sourceType(object)) |>
-    dplyr::mutate(dplyr::across(dplyr::everything(), as.character)) |>
+    dplyr::mutate(dplyr::across(dplyr::everything(), \(x) as.character(x))) |>
     tidyr::pivot_longer(
       cols = dplyr::everything(), names_to = "variable",
       values_to = "estimate_value"
@@ -256,7 +256,7 @@ summary.cohort_table <- function(object, ...) {
       by = "cohort_definition_id"
     ) |>
     dplyr::rename("result_id" = "cohort_definition_id") |>
-    dplyr::mutate(dplyr::across(!"result_id", as.character)) |>
+    dplyr::mutate(dplyr::across(!"result_id", \(x) as.character(x))) |>
     tidyr::pivot_longer(
       cols = !c("group_level", "result_id"),
       names_to = "variable_name",
@@ -289,7 +289,7 @@ summary.cohort_table <- function(object, ...) {
       by = "cohort_definition_id"
     ) |>
     dplyr::rename("result_id" = "cohort_definition_id") |>
-    dplyr::mutate(dplyr::across(!"result_id", as.character)) |>
+    dplyr::mutate(dplyr::across(!"result_id", \(x) as.character(x))) |>
     tidyr::pivot_longer(
       cols = c(
         "number_records", "number_subjects", "excluded_records",

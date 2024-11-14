@@ -667,7 +667,7 @@ validateResultArgument <- function(result,
   assertValidation(validation, call = call)
   assertTable(result, call = call)
 
-  result <- validateSummariseResult(result)
+  result <- validateSummarisedResult(result)
 
   return(invisible(result))
 }
