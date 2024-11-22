@@ -85,4 +85,3 @@ reference:
   desc: Deprecated function that will be eliminated in future releases of the package
 - contents:
   - matches("checkCohortRequirements|dropTable|toSnakeCase")
-
