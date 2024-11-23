@@ -43,36 +43,48 @@ compute.cdm_table <- function(x,
   cx <- class(x)
 
   logSqlFile <- getOption("omopgenerics.log_sql_path")
-  if(!is.null(logSqlFile) && inherits(cdmSource(x), "db_cdm")){
+  if (!is.null(logSqlFile) && inherits(cdmSource(x), "db_cdm")) {
     # log sql if option set
     # must have specified a directory that exists
     if (dir.exists(logSqlFile)) {
-    cli::cli_inform("SQL query saved to {logSqlFile}")
-    writeLines(utils::capture.output(dplyr::show_query(x)),
-               here::here(logSqlFile,
-                          paste0(logPrefix, "logged_query_ran_on_",
-                          format(Sys.time(),
-                                 format = "%Y_%m_%d_at_%H_%M_%S"),
-                          ".sql"
-                          )))
+      cli::cli_inform("SQL query saved to {logSqlFile}")
+      writeLines(
+        utils::capture.output(dplyr::show_query(x)),
+        here::here(
+          logSqlFile,
+          paste0(
+            logPrefix, "logged_query_ran_on_",
+            format(Sys.time(),
+              format = "%Y_%m_%d_at_%H_%M_%S"
+            ),
+            ".sql"
+          )
+        )
+      )
     } else {
       cli::cli_inform("SQL query not saved as '{logSqlFile}' not an existing directory")
     }
   }
 
   logSqlExplainFile <- getOption("omopgenerics.log_sql_explain_path")
-  if(!is.null(logSqlExplainFile) && inherits(cdmSource(x), "db_cdm")){
+  if (!is.null(logSqlExplainFile) && inherits(cdmSource(x), "db_cdm")) {
     # log sql if option set
     # must have specified a directory that exists
     if (dir.exists(logSqlExplainFile)) {
       cli::cli_inform("SQL explain saved to {logSqlExplainFile}")
-      writeLines(utils::capture.output(dplyr::explain(x)),
-                 here::here(logSqlExplainFile,
-                            paste0(logPrefix, "logged_query_ran_on_",
-                                   format(Sys.time(),
-                                          format = "%Y_%m_%d_at_%H_%M_%S"),
-                                   ".sql"
-                            )))
+      writeLines(
+        utils::capture.output(dplyr::explain(x)),
+        here::here(
+          logSqlExplainFile,
+          paste0(
+            logPrefix, "logged_query_ran_on_",
+            format(Sys.time(),
+              format = "%Y_%m_%d_at_%H_%M_%S"
+            ),
+            ".sql"
+          )
+        )
+      )
     } else {
       cli::cli_inform("SQL explain not saved as '{logSqlExplainFile}' not an existing directory")
     }
@@ -128,4 +140,3 @@ tmpPrefix <- function() {
   options(tmp_prefix_number = i)
   sprintf("tmp_%03i_", i)
 }
-

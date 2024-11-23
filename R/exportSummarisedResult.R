@@ -59,27 +59,27 @@ exportSummarisedResult <- function(...,
   assertClass(results, "summarised_result")
 
   results <- suppress(results, minCellCount = minCellCount)
-    # cdm name
-    cdmName <- results$cdm_name |>
-      unique() |>
-      paste0(collapse = "_")
-    fileName <- stringr::str_replace(
-      string = fileName,
-      pattern = "\\{cdm_name\\}",
-      replacement = cdmName
-    )
-    # date
-    date <- format(Sys.Date(), format = "%Y_%m_%d") |> as.character()
-    fileName <- stringr::str_replace(
-      string = fileName,
-      pattern = "\\{date\\}",
-      replacement = date
-    )
+  # cdm name
+  cdmName <- results$cdm_name |>
+    unique() |>
+    paste0(collapse = "_")
+  fileName <- stringr::str_replace(
+    string = fileName,
+    pattern = "\\{cdm_name\\}",
+    replacement = cdmName
+  )
+  # date
+  date <- format(Sys.Date(), format = "%Y_%m_%d") |> as.character()
+  fileName <- stringr::str_replace(
+    string = fileName,
+    pattern = "\\{date\\}",
+    replacement = date
+  )
 
-    # to tibble + pivot settings
-    x <- results |>
-      dplyr::as_tibble() |>
-      dplyr::union_all(results |> pivotSettings() |> dplyr::as_tibble())
+  # to tibble + pivot settings
+  x <- results |>
+    dplyr::as_tibble() |>
+    dplyr::union_all(results |> pivotSettings() |> dplyr::as_tibble())
 
   utils::write.csv(
     x,

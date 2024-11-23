@@ -192,17 +192,16 @@ uniqueId <- function(n = 1, exclude = character(), nChar = 3, prefix = "id_") {
 #' @return Boolean to indicate if a cdm_table is empty (TRUE or FALSE).
 #' @export
 #'
-isTableEmpty <- function(table){
+isTableEmpty <- function(table) {
+  assertClass(table, class = "cdm_table")
 
-  assertClass(table,class = "cdm_table")
+  x <- table |>
+    dplyr::ungroup() |>
+    utils::head(1) |>
+    dplyr::tally() |>
+    dplyr::pull() == 0
 
-     x <- table |>
-      dplyr::ungroup() |>
-      utils::head(1) |>
-      dplyr::tally() |>
-      dplyr::pull() == 0
-
-     return(x)
+  return(x)
 }
 
 #' Return a table of omop cdm fields informations
@@ -240,7 +239,7 @@ resultPackageVersion <- function(result) {
     ) |>
     dplyr::mutate(
       sym = dplyr::if_else(.data$n == 1, "v", "x"),
-      msg =  paste0("{.pkg ", .data$package_name, "}: ", .data$versions),
+      msg = paste0("{.pkg ", .data$package_name, "}: ", .data$versions),
     )
 
   # warn if multiple versions
@@ -248,7 +247,7 @@ resultPackageVersion <- function(result) {
     cli::cli_warn(c(
       "!" = "Multiple versions used for package{?s} {.pkg {x$package_name[x$n>1]}}.",
       "i" = "You can check the package_version with:",
-      " " = "omopgenerics::settings({.cls summarised_result})"
+      " " = "settings({.cls summarised_result})"
     ))
   }
   x$msg |>

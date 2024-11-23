@@ -21,7 +21,6 @@ reference:
 - contents:
   - attrition
   - bind
-  - participants
   - settings
   - suppress
 - subtitle: Create new objects
@@ -61,7 +60,7 @@ reference:
 - subtitle: summarised_result utility functions
   desc: Utility functions for summarised_result objects
 - contents:
-  - matches("exportSummarisedResult|importSummarisedResult|estimateTypeChoices|resultColumns|*.summarised_result")
+  - matches("exportSummarisedResult|importSummarisedResult|estimateTypeChoices|resultColumns|*.summarised_result|filter*|split*|unite*|strataColumns|additionalColumns|groupColumns|settingsColumns|tidyColumns|pivotEstimates|addSettings")
 - subtitle: codelist utility functions
   desc: Utility functions for codelist objects
 - contents:

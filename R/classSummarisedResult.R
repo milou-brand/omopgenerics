@@ -28,17 +28,17 @@
 #' library(omopgenerics)
 #'
 #' x <- tibble(
-#'  "result_id" = 1L,
-#'  "cdm_name" = "cprd",
-#'  "group_name" = "cohort_name",
-#'  "group_level" = "acetaminophen",
-#'  "strata_name" = "sex &&& age_group",
-#'  "strata_level" = c("male &&& <40", "male &&& >=40"),
-#'  "variable_name" = "number_subjects",
-#'  "variable_level" = NA_character_,
-#'  "estimate_name" = "count",
-#'  "estimate_type" = "integer",
-#'  "estimate_value" = c("5", "15"),
+#'   "result_id" = 1L,
+#'   "cdm_name" = "cprd",
+#'   "group_name" = "cohort_name",
+#'   "group_level" = "acetaminophen",
+#'   "strata_name" = "sex &&& age_group",
+#'   "strata_level" = c("male &&& <40", "male &&& >=40"),
+#'   "variable_name" = "number_subjects",
+#'   "variable_level" = NA_character_,
+#'   "estimate_name" = "count",
+#'   "estimate_type" = "integer",
+#'   "estimate_value" = c("5", "15"),
 #'   "additional_name" = "overall",
 #'   "additional_level" = "overall"
 #' ) |>
@@ -49,17 +49,17 @@
 #' summary(x)
 #'
 #' x <- tibble(
-#'  "result_id" = 1L,
-#'  "cdm_name" = "cprd",
-#'  "group_name" = "cohort_name",
-#'  "group_level" = "acetaminophen",
-#'  "strata_name" = "sex &&& age_group",
-#'  "strata_level" = c("male &&& <40", "male &&& >=40"),
-#'  "variable_name" = "number_subjects",
-#'  "variable_level" = NA_character_,
-#'  "estimate_name" = "count",
-#'  "estimate_type" = "integer",
-#'  "estimate_value" = c("5", "15"),
+#'   "result_id" = 1L,
+#'   "cdm_name" = "cprd",
+#'   "group_name" = "cohort_name",
+#'   "group_level" = "acetaminophen",
+#'   "strata_name" = "sex &&& age_group",
+#'   "strata_level" = c("male &&& <40", "male &&& >=40"),
+#'   "variable_name" = "number_subjects",
+#'   "variable_level" = NA_character_,
+#'   "estimate_name" = "count",
+#'   "estimate_type" = "integer",
+#'   "estimate_value" = c("5", "15"),
 #'   "additional_name" = "overall",
 #'   "additional_level" = "overall"
 #' ) |>
@@ -89,11 +89,13 @@ constructSummarisedResult <- function(x, settings) {
   x <- dplyr::as_tibble(x) |>
     dplyr::mutate(result_id = as.integer(.data$result_id))
 
-  settings <- createSettings(x, settings)
+  settings <- createSettings(x, settings) |>
+    dplyr::arrange(.data$result_id)
 
   x <- x |>
     dplyr::select(dplyr::all_of(resultColumns(table = "summarised_result"))) |>
-    dplyr::filter(.data$variable_name != "settings")
+    dplyr::filter(.data$variable_name != "settings") |>
+    dplyr::arrange(.data$result_id)
 
   structure(.Data = x, settings = settings) |>
     addClass(c("summarised_result", "omop_result"))
@@ -187,8 +189,42 @@ createSettings <- function(x, settings) {
       ))
   }
 
+  # min_cell_count
+  if (!"min_cell_count" %in% colnames(set)) {
+    set <- set |>
+      dplyr::mutate(min_cell_count = "0")
+  } else {
+    set <- set |>
+      dplyr::mutate(
+        min_cell_count = dplyr::coalesce(.data$min_cell_count, "0"),
+        min_cell_count = dplyr::if_else(
+          .data$min_cell_count == "1", "0", .data$min_cell_count
+        )
+      )
+  }
+
+  # remove NA
+  colsRemove <- set |>
+    purrr::map(\(x) {
+      if (all(is.na(x))) {
+        x
+      } else {
+        NULL
+      }
+    }) |>
+    purrr::compact() |>
+    names()
+  if (length(colsRemove) > 0) {
+    cli::cli_inform("{.var {colsRemove}} eliminated from settings as all elements are NA.")
+    set <- set |>
+      dplyr::select(!dplyr::all_of(colsRemove))
+  }
+
   # order variables
-  initialCols <- c("result_id", "result_type", "package_name", "package_version", "group", "strata", "additional")
+  initialCols <- c(
+    "result_id", "result_type", "package_name", "package_version", "group",
+    "strata", "additional", "min_cell_count"
+  )
   otherCols <- sort(colnames(set)[!colnames(set) %in% initialCols])
   set <- set |>
     dplyr::select(dplyr::all_of(c(initialCols, otherCols)))
@@ -265,20 +301,23 @@ validateResultSettings <- function(set, call) {
 
   invisible()
 }
-splitLabel <- function(x) {
-  res <- stringr::str_split_1(string = x, pattern = " &&& ")
-  res[res != ""]
+getLabels <- function(x) {
+  res <- stringr::str_split(string = x, pattern = " &&& ") |>
+    purrr::flatten_chr()
+  res[!res %in% c("", "overall")]
 }
 extractColumns <- function(x, col) {
   x[[col]] |>
     as.list() |>
     rlang::set_names(as.character(x$result_id)) |>
-    purrr::map(splitLabel)
+    purrr::map(\(x) unique(getLabels(x)))
 }
 reportOverlap <- function(tidy1, tidy2, group1, group2, call) {
   x <- purrr::map2(tidy1, tidy2, intersect) |>
     purrr::compact()
-  if (length(x) == 0) return(invisible())
+  if (length(x) == 0) {
+    return(invisible())
+  }
   message <- x |>
     purrr::imap_chr(\(x, nm) {
       paste0(
@@ -534,7 +573,9 @@ validateNameLevel <- function(x,
   }
 
   # check case
-  nameCase <- distinctPairs[["name_elements"]] |> unlist() |> unique()
+  nameCase <- distinctPairs[["name_elements"]] |>
+    unlist() |>
+    unique()
   notSnake <- nameCase[!isCase(nameCase, "snake")]
   if (length(notSnake) > 0) {
     "{length(notSnake)} element{?s} in {nameColumn} {?is/are} not snake_case." |>
@@ -544,9 +585,10 @@ validateNameLevel <- function(x,
   return(invisible(x))
 }
 isCase <- function(x, case) {
-  if (length(x) == 0) return(logical())
-  flag <- switch(
-    case,
+  if (length(x) == 0) {
+    return(logical())
+  }
+  flag <- switch(case,
     "snake" = isSnakeCase(x),
     "sentence" = isSentenceCase(x),
     "NA" = rep(TRUE, length(x)),
@@ -605,8 +647,7 @@ checkDuplicated <- function(x, validation, call = parent.frame()) {
   return(invisible(TRUE))
 }
 giveType <- function(x, type) {
-  switch(
-    type,
+  switch(type,
     "integer" = as.integer(x),
     "double" = as.double(x),
     "character" = as.character(x),
@@ -642,8 +683,8 @@ validateTidyNames <- function(result, call = parent.frame()) {
   # compare each pair
   len <- length(cols)
   nms <- names(cols)
-  for (k in 1:(len -1)) {
-    for (i in (k+1):len) {
+  for (k in 1:(len - 1)) {
+    for (i in (k + 1):len) {
       both <- intersect(cols[[k]], cols[[i]])
       if (length(both) > 0) {
         "{.var {both}} {?is/are} present in both '{nms[k]}' and '{nms[i]}'. This will be an error in the next release." |>
@@ -731,50 +772,6 @@ emptySummarisedResult <- function(settings = NULL) {
     newSummarisedResult(settings = settings)
 }
 
-.validateSummarisedResult <- function(result,
-                                      checkNameLevelPairs,
-                                      checkTidyColumns,
-                                      checkDuplicated,
-                                      call = parent.frame()) {
-  # basic checks
-  # class
-  if (!inherits(result, "summarised_result")) {
-    "result is not a {.cls summarised_result} object." |>
-      report(validation = "error", call = call)
-  }
-
-  # compulsory columns
-  result <- checkColumns(result, "summarised_result", call = call)
-
-  # columns format
-  result <- checkColumnsFormat(result, "summarised_result")
-
-  # Cannot contain NA columns
-  checkNA(result, "summarised_result")
-
-  # duplicated entries with same value
-  nr <- nrow(x)
-  x <- x |> dplyr::distinct()
-  eliminated <- nr - nrow(x)
-  if (eliminated > 0) {
-    "{eliminated} duplicated row{?s} eliminated." |>
-      report(validation = "message", call = call)
-  }
-
-  # checkNameLevelPairs
-  if (!is.null(checkNameLevelPairs)) {
-    for (prefix in c("group", "strata", "additional")) {
-      validateNameLevel(result, prefix = prefix, validation = checkNameLevelPairs)
-    }
-  }
-
-  # checkTidyColumns
-
-  # checkDuplicated
-
-
-  return(result)
-}
 report <- function(message,
                    validation, # error/warning/inform
                    call = parent.frame(), # where error is reported

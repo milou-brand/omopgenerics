@@ -91,7 +91,9 @@ summary.cdm_reference <- function(object, ...) {
   # cdm source data
   vocab_version <- getVocabularyVersion(object)
   if ("cdm_source" %in% names(object) &&
-      object[["cdm_source"]] |> dplyr::tally() |> dplyr::pull("n") == 1) {
+    object[["cdm_source"]] |>
+      dplyr::tally() |>
+      dplyr::pull("n") == 1) {
     cdmSourceSummary <- object[["cdm_source"]] |>
       dplyr::collect() |>
       dplyr::select(dplyr::any_of(c(
@@ -344,7 +346,7 @@ addPkgDetails <- function(res) {
 #' person <- tibble(
 #'   person_id = 1, gender_concept_id = 0, year_of_birth = 1990,
 #'   race_concept_id = 0, ethnicity_concept_id = 0
-#'  )
+#' )
 #' observation_period <- tibble(
 #'   observation_period_id = 1, person_id = 1,
 #'   observation_period_start_date = as.Date("2000-01-01"),
@@ -364,7 +366,9 @@ summary.summarised_result <- function(object, ...) {
   cdms <- object$cdm_name |> unique()
   cdms <- cdms[!is.na(cdms)]
   ids <- object$result_id |> unique()
-  set <- object |> settings() |> colnames()
+  set <- object |>
+    settings() |>
+    colnames()
   set <- set[set != "result_id"]
   cli::cli_inform(
     "A summarised_result object with {nrow(object)} rows, {length(ids)}
