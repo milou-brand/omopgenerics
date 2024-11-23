@@ -1,6 +1,4 @@
-
-test_that("you can create empty objects",{
-
+test_that("you can create empty objects", {
   # cdm_reference
   expect_error(emptyCdmReference())
   expect_no_error(cdm <- emptyCdmReference(cdmName = "test"))
@@ -57,7 +55,8 @@ test_that("you can create empty objects",{
     dplyr::tibble(
       "result_id" = integer(), "result_type" = character(),
       "package_name" = character(), "package_version" = character(),
-      "group" = character(), "strata" = character(), "additional" = character()
+      "group" = character(), "strata" = character(), "additional" = character(),
+      "min_cell_count" = character()
     )
   )
 
@@ -65,8 +64,7 @@ test_that("you can create empty objects",{
   expect_no_error(x <- emptySummarisedResult(settings = set))
   expect_true(inherits(x, "summarised_result"))
   expect_identical(
-    settings(x) |> dplyr::select("result_id","my_setting"),
+    settings(x) |> dplyr::select("result_id", "my_setting"),
     set |> dplyr::mutate(my_setting = as.character(.data$my_setting))
   )
-
 })

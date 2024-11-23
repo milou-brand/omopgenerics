@@ -34,7 +34,7 @@ test_that("test SummarisedResult object", {
 
   # check none character
   x <- dplyr::tibble(
-    "result_id" = NA_character_,
+    "result_id" = 1L,
     "cdm_name" = 1,
     "result_type" = "summarised_characteristics",
     "package_name" = "PatientProfiles",
@@ -53,12 +53,12 @@ test_that("test SummarisedResult object", {
   )
   expect_message(expect_message(newSummarisedResult(x = x)))
 
-  #check wrong columns
+  # check wrong columns
   x <- dplyr::tibble(
     "package" = "PatientProfiles",
     "package_version" = "0.4.0",
-    "group_name" = "sex",
-    "group_level" = "male",
+    "group_name" = "cohort_name",
+    "group_level" = "my_cohort",
     "strata_name" = "sex",
     "strata_level" = "male",
     "variable" = "age_group",
@@ -75,8 +75,8 @@ test_that("test SummarisedResult object", {
     "result_type" = "summarised_characteristics",
     "package_name" = "PatientProfiles",
     "package_version" = "0.4.0",
-    "group_name" = "sex",
-    "group_level" = "male",
+    "group_name" = "cohort_name",
+    "group_level" = "my_cohort",
     "strata_name" = "sex",
     "strata_level" = "male",
     "variable_name" = "Age group",
@@ -155,8 +155,10 @@ test_that("test SummarisedResult object", {
 
   expect_identical(
     sort(colnames(settings(res))),
-    c("custom", "package_name", "package_version", "result_id",
-      "result_type", "group", "strata", "additional") |>
+    c(
+      "custom", "package_name", "package_version", "result_id",
+      "result_type", "group", "strata", "additional", "min_cell_count"
+    ) |>
       sort()
   )
 
@@ -337,10 +339,12 @@ test_that("validateNameLevel", {
   )
   expect_error(validateNameLevel(sr, prefix = "group", sep = " and "))
   expect_warning(expect_warning(validateNameLevel(
-    sr, prefix = "group", sep = " and ", validation = "warning"
+    sr,
+    prefix = "group", sep = " and ", validation = "warning"
   )))
   expect_warning(validateNameLevel(
-    sr, prefix = "group", sep = " &&& | and ", validation = "warning"
+    sr,
+    prefix = "group", sep = " &&& | and ", validation = "warning"
   ))
 })
 
@@ -366,4 +370,32 @@ test_that("validate duplicates", {
   expect_no_error(x |> newSummarisedResult())
   sr <- dplyr::bind_rows(x, x |> dplyr::mutate(estimate_value = "6"))
   expect_error(sr |> newSummarisedResult())
+})
+
+test_that("eliminate NA settings", {
+  x <- dplyr::tibble(
+    "result_id" = c(1L, 2L),
+    "cdm_name" = "cprd",
+    "group_name" = "cohort_name",
+    "group_level" = "cohort1",
+    "strata_name" = "sex",
+    "strata_level" = "male",
+    "variable_name" = "Age group",
+    "variable_level" = "10 to 50",
+    "estimate_name" = "count",
+    "estimate_type" = "numeric",
+    "estimate_value" = "5",
+    "additional_name" = "overall",
+    "additional_level" = "overall"
+  )
+  set <- dplyr::tibble(
+    result_id = c(1L, 2L),
+    result_type = c("res1", "res2"),
+    param_to_eliminate = NA_character_,
+    param_not_eliminated = c("1", NA_character_)
+  )
+  expect_no_error(res <- newSummarisedResult(x = x, settings = set))
+  setres <- settings(res)
+  expect_true("param_not_eliminated" %in% colnames(setres))
+  expect_false("param_to_eliminate" %in% colnames(setres))
 })

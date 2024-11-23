@@ -18,12 +18,14 @@ library(dplyr)
 
 # fields and type of tables
 fieldsCdmTables <- readr::read_csv(
-  here::here("data-raw", "OMOP_CDMv5.3_Field_Level.csv"), show_col_types = FALSE
+  here::here("data-raw", "OMOP_CDMv5.3_Field_Level.csv"),
+  show_col_types = FALSE
 ) |>
   dplyr::mutate(cdm_version = "5.3") |>
   dplyr::union_all(
     readr::read_csv(
-      here::here("data-raw", "OMOP_CDMv5.4_Field_Level.csv"), show_col_types = FALSE
+      here::here("data-raw", "OMOP_CDMv5.4_Field_Level.csv"),
+      show_col_types = FALSE
     ) |>
       dplyr::mutate(cdm_version = "5.4")
   ) |>
@@ -61,16 +63,16 @@ fieldsCohorts <- tibble(
       "integer"
     )
   )) |>
-    union_all(tibble(
-      cdm_table_name = "cohort_codelist",
-      cdm_field_name = c(
-        "cohort_definition_id", "codelist_name", "concept_id" , "type"
-      ),
-      is_required = TRUE,
-      cdm_datatype = c(
-        "integer", "varchar(255)", "integer", "varchar(255)"
-      )
-    ))
+  union_all(tibble(
+    cdm_table_name = "cohort_codelist",
+    cdm_field_name = c(
+      "cohort_definition_id", "codelist_name", "concept_id", "type"
+    ),
+    is_required = TRUE,
+    cdm_datatype = c(
+      "integer", "varchar(255)", "integer", "varchar(255)"
+    )
+  ))
 
 fieldsCohorts <- fieldsCohorts |>
   dplyr::mutate(cdm_version = "5.3") |>
@@ -82,7 +84,7 @@ fieldsCohorts <- fieldsCohorts |>
 fieldsAchilles <- dplyr::tibble(
   cdm_table_name = "achilles_analysis",
   cdm_field_name = c(
-    "analysis_id","analysis_name", "stratum_1_name", "stratum_2_name",
+    "analysis_id", "analysis_name", "stratum_1_name", "stratum_2_name",
     "stratum_3_name", "stratum_4_name", "stratum_5_name", "is_default",
     "category"
   ),
@@ -206,12 +208,12 @@ fieldTablesColumns <- dplyr::tribble(
   "visit_detail", "visit_detail_start_date", "visit_detail_end_date", "visit_detail_concept_id", "visit_detail_source_concept_id", "visit_detail_type_concept_id", "visit_detail_id", "visit", "person_id",
   "specimen", "specimen_date", "specimen_date", "specimen_concept_id", "specimen_source_concept_id", "specimen_type_concept_id", "specimen_id", "specimen", "person_id",
   "note", "note_date", "note_date", NA, NA, "note_type_concept_id", "note_id", NA, "person_id",
-  "condition_occurrence", "condition_start_date", "condition_end_date", "condition_concept_id", "condition_source_concept_id", "condition_type_concept_id", "condition_occurrence_id","condition", "person_id",
-  "drug_exposure", "drug_exposure_start_date", "drug_exposure_end_date", "drug_concept_id", "drug_source_concept_id", "drug_type_concept_id", "drug_exposure_id","drug", "person_id",
-  "procedure_occurrence", "procedure_date", "procedure_date", "procedure_concept_id", "procedure_source_concept_id", "procedure_type_concept_id", "procedure_occurrence_id","procedure", "person_id",
-  "device_exposure", "device_exposure_start_date", "device_exposure_end_date", "device_concept_id", "device_source_concept_id", "device_type_concept_id", "device_exposure_id","device", "person_id",
-  "measurement", "measurement_date", "measurement_date", "measurement_concept_id", "measurement_source_concept_id", "measurement_type_concept_id", "measurement_id","measurement", "person_id",
-  "observation", "observation_date", "observation_date", "observation_concept_id", "observation_source_concept_id", "observation_type_concept_id", "observation_id","observation", "person_id",
+  "condition_occurrence", "condition_start_date", "condition_end_date", "condition_concept_id", "condition_source_concept_id", "condition_type_concept_id", "condition_occurrence_id", "condition", "person_id",
+  "drug_exposure", "drug_exposure_start_date", "drug_exposure_end_date", "drug_concept_id", "drug_source_concept_id", "drug_type_concept_id", "drug_exposure_id", "drug", "person_id",
+  "procedure_occurrence", "procedure_date", "procedure_date", "procedure_concept_id", "procedure_source_concept_id", "procedure_type_concept_id", "procedure_occurrence_id", "procedure", "person_id",
+  "device_exposure", "device_exposure_start_date", "device_exposure_end_date", "device_concept_id", "device_source_concept_id", "device_type_concept_id", "device_exposure_id", "device", "person_id",
+  "measurement", "measurement_date", "measurement_date", "measurement_concept_id", "measurement_source_concept_id", "measurement_type_concept_id", "measurement_id", "measurement", "person_id",
+  "observation", "observation_date", "observation_date", "observation_concept_id", "observation_source_concept_id", "observation_type_concept_id", "observation_id", "observation", "person_id",
   "death", "death_date", "death_date", "cause_concept_id", "cause_source_concept_id", "death_type_concept_id", "person_id", NA, "person_id",
   "condition_era", "condition_era_start_date", "condition_era_end_date", "condition_concept_id", NA, NA, "consition_era_id", "condition", "person_id",
   "drug_era", "drug_era_start_date", "drug_era_end_date", "drug_concept_id", NA, NA, "drug_era_id", "drug", "person_id",
@@ -219,5 +221,6 @@ fieldTablesColumns <- dplyr::tribble(
 )
 
 usethis::use_data(
-  fieldsTables, fieldsResults, groupCount, fieldTablesColumns, internal = TRUE, overwrite = TRUE
+  fieldsTables, fieldsResults, groupCount, fieldTablesColumns,
+  internal = TRUE, overwrite = TRUE
 )

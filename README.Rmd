@@ -103,8 +103,10 @@ Any table to be part of a cdm object has to fulfill 4 conditions:
 
 A concept set can be represented as either a codelist or a concept set expression. A codelist is a named list, with each item of the list containing specific concept IDs. 
 ```{r}
-condition_codes <- list("diabetes" = c(201820, 4087682, 3655269),
-                        "asthma" = 317009)
+condition_codes <- list(
+  "diabetes" = c(201820, 4087682, 3655269),
+  "asthma" = 317009
+)
 condition_codes <- newCodelist(condition_codes)
 
 condition_codes
@@ -175,13 +177,13 @@ A summarised result provides a standard format for the results of an analysis pe
 
 For example this format is used when we get a summary of the cdm as a whole
 ```{r}
-summary(cdm) |> 
+summary(cdm) |>
   dplyr::glimpse()
 ```
 
 and also when we summarise a cohort
 ```{r}
-summary(cdm$diabetes) |> 
+summary(cdm$diabetes) |>
   dplyr::glimpse()
 ```
 
