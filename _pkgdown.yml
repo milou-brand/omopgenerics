@@ -26,61 +26,97 @@ reference:
 - subtitle: Create new objects
   desc: To create new omopgenerics S3 classes objects
 - contents:
-  - matches("new*")
+  - starts_with("new")
 - subtitle: Creates empty objects
   desc: To create empty omopgenerics S3 classes objects
 - contents:
-  - matches("empty*")
+  - starts_with("empty")
 - subtitle: cdm_reference utility functions
   desc: Utility functions for cdm_reference objects
 - contents:
-  - matches("cdm*")
+  - starts_with("cdm")
   - listSourceTables
   - dropSourceTable
   - insertTable
   - readSourceTable
+  - insertCdmTo
   - getPersonIdentifier
-  - matches("*.cdm_reference")
+  - ends_with(".cdm_reference")
 - subtitle: cdm_table utility functions
   desc: Utility functions for cdm_table objects
 - contents:
-  - matches("tableName|tableSource")
+  - tableName
+  - tableSource
+  - numberRecords
+  - numberSubjects
+  - ends_with("cdm_table")
 - subtitle: omop_table utility functions
   desc: Utility functions for omop_table objects
 - contents:
-  - matches("omop*")
+  - starts_with("omop")
+  - omopTableFields
 - subtitle: achilles_table utility functions
   desc: Utility functions for achilles_table objects
 - contents:
-  - matches("achilles*")
+  - starts_with("achilles")
 - subtitle: cohort_table utility functions
   desc: Utility functions for cohort_table objects
 - contents:
-  - matches("cohort*|getCohortId|getCohortName|recordCohortAttrition|*.cohort_table")
+  - starts_with("cohort")
+  - getCohortId
+  - getCohortName
+  - recordCohortAttrition
+  - ends_with("cohort_table")
 - subtitle: summarised_result utility functions
   desc: Utility functions for summarised_result objects
 - contents:
-  - matches("exportSummarisedResult|importSummarisedResult|estimateTypeChoices|resultColumns|*.summarised_result|filter*|split*|unite*|strataColumns|additionalColumns|groupColumns|settingsColumns|tidyColumns|pivotEstimates|addSettings")
+  - exportSummarisedResult
+  - importSummarisedResult
+  - estimateTypeChoices
+  - resultColumns
+  - resultPackageVersion
+  - isResultSuppressed
+  - ends_with(".summarised_result")
+  - starts_with("filter")
+  - starts_with("split")
+  - starts_with("unite")
+  - strataColumns
+  - additionalColumns
+  - groupColumns
+  - settingsColumns
+  - tidyColumns
+  - pivotEstimates
+  - addSettings
 - subtitle: codelist utility functions
   desc: Utility functions for codelist objects
 - contents:
-  - matches("exportCodelist|exportConceptSetExpression|importCodelist|importConceptSetExpression|*.codelist|*.codelist_with_details|*.conceptSetExpression|resultPackageVersion|uniqueIdentifer|startDate|endDate|standardConcept|sourceConcept|typeConcept|domainId")
+  - exportCodelist
+  - exportConceptSetExpression
+  - importCodelist
+  - importConceptSetExpression
+  - ends_with(".codelist")
+  - ends_with(".codelist_with_details")
+  - ends_with(".conceptSetExpression")
 - subtitle: Argument validation
   desc: To validate input arguments of the functions
 - contents:
-  - matches("validate*")
-  desc: To check if result is correctly suppressed
-- contents:
-  - matches("isResultSuppressed")
+  - starts_with("validate")
 - subtitle: General assertions
   desc: To assert that an object fulfills certain criteria
 - contents:
-  - matches("assert*")
+  - starts_with("assert")
 - subtitle: Utility functions
-  desc: To be used internally by other packages, not meant to be user focused functions
 - contents:
-  - matches("insertFromSource|sourceType|tmpPrefix|uniqueId|uniqueTableName|isTableEmpty|omopTableFields")
+  - insertFromSource
+  - sourceType
+  - tmpPrefix
+  - uniqueId
+  - uniqueTableName
+  - isTableEmpty
+  - toSnakeCase
+  - combineStrata
 - subtitle: Deprecated
   desc: Deprecated function that will be eliminated in future releases of the package
 - contents:
-  - matches("checkCohortRequirements|dropTable|toSnakeCase")
+  - checkCohortRequirements
+  - dropTable
