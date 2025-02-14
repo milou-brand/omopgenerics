@@ -220,7 +220,10 @@ fieldTablesColumns <- dplyr::tribble(
   "dose_era", "dose_era_start_date", "dose_era_end_date", "drug_concept_id", NA, NA, "dose_era_id", "drug", "person_id"
 )
 
+supportedCdmVersions <- c("5.3", "5.4")
+
 usethis::use_data(
   fieldsTables, fieldsResults, groupCount, fieldTablesColumns,
+  supportedCdmVersions,
   internal = TRUE, overwrite = TRUE
 )

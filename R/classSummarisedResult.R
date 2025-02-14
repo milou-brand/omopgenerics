@@ -142,7 +142,11 @@ createSettings <- function(x, settings) {
   cols <- colnames(x)
   cols <- cols[!cols %in% resultColumns("summarised_result")]
   if (length(cols) > 0) {
-    cli::cli_inform("{.var {cols}} moved to settings.")
+    # to consider to give an error in future release
+    cli::cli_inform(c(
+      "!" = "{.var {cols}} moved to settings. This is not recommended as settings should be explicitly provided.",
+      "i" = "NOTE that this can cause problems with settings."
+    ))
     set$extra_columns <- x |>
       dplyr::select("result_id", dplyr::all_of(cols)) |>
       dplyr::distinct()
@@ -302,15 +306,19 @@ validateResultSettings <- function(set, call) {
   invisible()
 }
 getLabels <- function(x) {
-  res <- stringr::str_split(string = x, pattern = " &&& ") |>
-    purrr::flatten_chr()
-  res[!res %in% c("", "overall")]
+  stringr::str_split(string = x, pattern = " &&& ") |>
+    purrr::map(\(x) x[!x %in% c("", "overall")])
 }
 extractColumns <- function(x, col) {
   x[[col]] |>
     as.list() |>
     rlang::set_names(as.character(x$result_id)) |>
-    purrr::map(\(x) unique(getLabels(x)))
+    purrr::map(\(x) {
+      x |>
+        getLabels() |>
+        purrr::flatten_chr() |>
+        unique()
+    })
 }
 reportOverlap <- function(tidy1, tidy2, group1, group2, call) {
   x <- purrr::map2(tidy1, tidy2, intersect) |>
@@ -339,6 +347,13 @@ validateSummarisedResultTable <- function(x,
   notPresent <- columns[!columns %in% colnames(x)]
   if (length(notPresent) > 0) {
     "{.var {notPresent}} not present in {.cls summarised_result} object." |>
+      cli::cli_abort(call = call)
+  }
+
+  # extra columns
+  extraColumns <- colnames(x)[!colnames(x) %in% columns]
+  if (length(extraColumns) > 0) {
+    "extra columns ({.var {extraColumns}}) not allowed in {.cls summarised_result} object." |>
       cli::cli_abort(call = call)
   }
 
