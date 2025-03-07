@@ -70,6 +70,7 @@ reference:
 - subtitle: summarised_result utility functions
   desc: Utility functions for summarised_result objects
 - contents:
+  - transformToSummarisedResult
   - exportSummarisedResult
   - importSummarisedResult
   - estimateTypeChoices
