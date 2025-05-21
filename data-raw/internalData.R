@@ -66,7 +66,7 @@ fieldsCohorts <- tibble(
   union_all(tibble(
     cdm_table_name = "cohort_codelist",
     cdm_field_name = c(
-      "cohort_definition_id", "codelist_name", "concept_id", "type"
+      "cohort_definition_id", "codelist_name", "concept_id", "codelist_type"
     ),
     is_required = TRUE,
     cdm_datatype = c(
