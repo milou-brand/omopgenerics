@@ -10,6 +10,10 @@ articles:
   - codelists
   - cohorts
   - summarised_result
+- title: OMOP Studies
+  navbar: OMOP Studies
+  contents:
+  - logging
 - title: Principles
   navbar: Principles
   contents:
@@ -116,6 +120,9 @@ reference:
   - isTableEmpty
   - toSnakeCase
   - combineStrata
+  - createLogFile
+  - logMessage
+  - summariseLogFile
 - subtitle: Deprecated
   desc: Deprecated function that will be eliminated in future releases of the package
 - contents:

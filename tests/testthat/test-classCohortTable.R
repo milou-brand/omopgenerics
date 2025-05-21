@@ -184,7 +184,7 @@ test_that("test create cohort", {
   expect_false("cdm_table" %in% class(x))
   expect_false("cdm_table" %in% attr(x, "cohort_set"))
   expect_false("cdm_table" %in% attr(x, "cohort_attrition"))
-  expect_false("cohort_table" %in% class(x))
+  expect_true("cohort_table" %in% class(x))
 
   # remove cols
   expect_no_error(validateGeneratedCohortSet(cohort3))
@@ -282,6 +282,20 @@ test_that("test validateCohortArgument", {
     tables = list("person" = person, "observation_period" = observation_period),
     cdmName = "test"
   )
+
+  # test temp table
+  cdm <- insertTable(cdm, name = "cohort1", table = dplyr::tibble(
+    cohort_definition_id = 1L, subject_id = 1L,
+    cohort_start_date = as.Date(c("2020-01-01", "2020-01-10")),
+    cohort_end_date = as.Date(c("2020-01-10", "2020-01-25"))
+  ))
+  cdm$cohort1 <- newCohortTable(cdm$cohort1, .softValidation = TRUE)
+  expect_no_error(validateCohortArgument(cdm$cohort1, checkPermanentTable = TRUE))
+  expect_no_error(validateCohortArgument(cdm$cohort1, checkPermanentTable = FALSE))
+  # make it temp
+  cdm$cohort1 <- cdm$cohort1 |> dplyr::compute()
+  expect_error(validateCohortArgument(cdm$cohort1, checkPermanentTable = TRUE))
+  expect_no_error(validateCohortArgument(cdm$cohort1, checkPermanentTable = FALSE))
 
   # test overlap
   cdm <- insertTable(cdm, name = "cohort1", table = dplyr::tibble(
@@ -391,7 +405,7 @@ test_that("test validateCohortArgument", {
   # check missing column
   cdm$cohort1 <- original
   attr(cdm$cohort1, "cohort_codelist") <- attr(cdm$cohort1, "cohort_codelist") |>
-    dplyr::select(!c("codelist_name", "type"))
+    dplyr::select(!c("codelist_name", "codelist_type"))
   expect_error(validateCohortArgument(cdm$cohort1, checkAttributes = TRUE))
 
   # check no cohortId in attrition

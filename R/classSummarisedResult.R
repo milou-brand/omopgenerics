@@ -209,15 +209,12 @@ createSettings <- function(x, settings) {
 
   # remove NA
   colsRemove <- set |>
-    purrr::map(\(x) {
-      if (all(is.na(x))) {
-        x
-      } else {
-        NULL
-      }
-    }) |>
-    purrr::compact() |>
+    purrr::keep(\(x) all(is.na(x))) |>
     names()
+  colsRemove <- colsRemove[!colsRemove %in% c(
+    "result_id", "result_type", "package_name", "package_version", "group",
+    "strata", "additional", "min_cell_count"
+  )]
   if (length(colsRemove) > 0) {
     cli::cli_inform("{.var {colsRemove}} eliminated from settings as all elements are NA.")
     set <- set |>
@@ -485,7 +482,8 @@ checkGroupCount <- function(x, validation = "error", call = parent.frame()) {
       ol <- obsLabels[obsLabelsL %in% gcount]
       xx <- x |>
         dplyr::filter(
-          .data$variable_name %in% ol & grepl("count", .data$estimate_name)
+          .data$variable_name %in% ol &
+            stringr::str_detect(.data$estimate_name, "count")
         ) |>
         dplyr::select(dplyr::all_of(c(grouping, "variable_name"))) |>
         dplyr::group_by(dplyr::across(dplyr::all_of(grouping))) |>
@@ -943,7 +941,8 @@ transformToSummarisedResult <- function(x,
     tidyr::pivot_longer(
       cols = dplyr::all_of(estimates),
       names_to = "estimate_name",
-      values_to = "estimate_value"
+      values_to = "estimate_value",
+      values_drop_na = TRUE
     ) |>
     dplyr::inner_join(
       types |>
@@ -972,9 +971,9 @@ transformToSummarisedResult <- function(x,
   }
   set <- set |>
     dplyr::mutate(
-      group = paste0(.env$group, collapse = "&&&"),
-      strata = paste0(.env$strata, collapse = "&&&"),
-      additional = paste0(.env$additional, collapse = "&&&")
+      group = paste0(.env$group, collapse = " &&& "),
+      strata = paste0(.env$strata, collapse = " &&& "),
+      additional = paste0(.env$additional, collapse = " &&& ")
     )
   newSummarisedResult(x = x, settings = set)
 }
