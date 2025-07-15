@@ -18,6 +18,7 @@ articles:
   navbar: Principles
   contents:
   - reexport
+  - expanding_omopgenerics
 
 reference:
 - subtitle: Methods
@@ -46,6 +47,7 @@ reference:
   - insertCdmTo
   - getPersonIdentifier
   - ends_with(".cdm_reference")
+  - ends_with(".cdm_source")
 - subtitle: cdm_table utility functions
   desc: Utility functions for cdm_table objects
 - contents:
@@ -102,6 +104,14 @@ reference:
   - ends_with(".codelist")
   - ends_with(".codelist_with_details")
   - ends_with(".conceptSetExpression")
+- subtitle: Work with indexes
+  desc: Methods and functions to work with indexes in database backends.
+- contents:
+  - existingIndexes
+  - expectedIndexes
+  - statusIndexes
+  - createIndexes
+  - createTableIndex
 - subtitle: Argument validation
   desc: To validate input arguments of the functions
 - contents:

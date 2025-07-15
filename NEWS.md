@@ -1,3 +1,10 @@
+# omopgenerics 1.3.0
+
+* write method fro summary.cdm_source by @catalamarti in #719 #720
+* Add query id in logging files by @catalamarti in #716
+* Expanding omopgenerics vignette by @catalamarti in #721
+* Indexes experimental functions by @catalamarti in #722 #723 #724
+
 # omopgenerics 1.2.0
 
 * Remove NA in estimates in transformToSummarisedResult by @catalamarti in #702
